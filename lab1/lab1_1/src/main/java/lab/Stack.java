@@ -1,29 +1,51 @@
 package lab;
 
+import java.util.LinkedList;
+
 public class Stack {
-    private int[] stack;
+    private LinkedList<Integer> stack;
     private int top;
     private int size;
+    private int maxSize;
 
-    public Stack(int size) {
-        this.size = size;
-        stack = new int[size];
+    public Stack() {
+        this.size = 0;
+        stack = new LinkedList<>();
         top = -1;
     }
 
-    public void push(int value) {
-        if (top == size - 1) {
-            throw new StackOverflowError();
+    public Stack(int maxSize) {
+        this.size = 0;
+        this.maxSize = maxSize;
+        stack = new LinkedList<>();
+        top = -1;
+    }
+
+    public void push(int item) {
+        if (isFull()) {
+            throw new StackOverflowError("Stack is full");
         }
-        stack[++top] = value;
+        stack.add(item);
+        top++;
+        size++;
     }
 
     public int pop() {
-        return stack[top--];
+        if (isEmpty()) {
+            throw new ArrayIndexOutOfBoundsException("Stack is empty");
+        }
+        int item = stack.get(top);
+        stack.remove(top);
+        top--;
+        size--;
+        return item;
     }
 
     public int peek() {
-        return stack[top];
+        if (isEmpty()) {
+            throw new ArrayIndexOutOfBoundsException("Stack is empty");
+        }
+        return stack.get(top);
     }
 
     public boolean isEmpty() {
@@ -35,6 +57,9 @@ public class Stack {
     }
 
     public boolean isFull() {
-        return top == size - 1;
+        if (maxSize == 0) {
+            return false;
+        }
+        return size == maxSize;
     }
 }

@@ -8,7 +8,7 @@ class StackTest {
 
     @Test
     void testPush() {
-        Stack stack = new Stack(10);  
+        Stack stack = new Stack();  
         stack.push(1);
         stack.push(2);
         stack.push(3);
@@ -17,7 +17,7 @@ class StackTest {
 
     @Test
     void testPop() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         stack.push(1);
         stack.push(2);
         stack.push(3);
@@ -28,31 +28,22 @@ class StackTest {
 
     @Test
     void testPeek() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         stack.push(1);
         assertEquals(1, stack.peek());
     }
 
     @Test
     void testisEmpty() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         stack.push(1);
         assertFalse(stack.isEmpty());
     }
 
     @Test
     void testgetSize() {
-        Stack stack = new Stack(10);
-        assertEquals(10, stack.getSize());
-    }
-
-    @Test
-    void testisFull() {
-        Stack stack = new Stack(10);
-        for (int i = 0; i < 10; i++) {
-            stack.push(i);
-        }
-        assertTrue(stack.isFull());
+        Stack stack = new Stack();
+        assertEquals(0, stack.getSize());
     }
 
     @Test
@@ -66,19 +57,19 @@ class StackTest {
 
     @Test
     void testStackUnderflowError() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> stack.pop());
     }
 
     @Test
     void testPeekEmptyStack() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> stack.peek());
     }
 
     @Test
     void testPopEmptyStack() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> stack.pop());
     }
 
