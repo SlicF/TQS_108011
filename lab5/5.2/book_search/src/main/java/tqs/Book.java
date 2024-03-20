@@ -1,14 +1,17 @@
 package tqs;
 
+import java.time.LocalDate;
+
 public class Book {
 
     private String title;
     private String author;
+    private LocalDate published;
 
-    // standard constructors, getters & setters ...
-    public Book(String title, String author) {
+    public Book(String title, String author, LocalDate published) {
         this.title = title;
         this.author = author;
+        this.published = published;
     }
 
     public String getTitle() {
@@ -19,6 +22,10 @@ public class Book {
         return author;
     }
 
+    public LocalDate getPublished() {
+        return published;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -27,23 +34,28 @@ public class Book {
         this.author = author;
     }
 
-    @Override
-    public String toString() {
-        return "Book{" +
-                "title='" + title + '\'' +
-                ", author='" + author + '\'' +
-                '}';
+    public void setPublished(LocalDate published) {
+        this.published = published;
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Book other = (Book) obj;
+
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof Book)) {
-            return false;
+
+        if (this.title.equals(other.title) && this.author.equals(other.author) && this.published.equals(other.published)) {
+            return true;
         }
-        Book book = (Book) obj;
-        return book.getTitle().equals(this.title) && book.getAuthor().equals(this.author);
+
+        return false;
     }
 }
