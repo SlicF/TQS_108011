@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Travel Planner</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script>
+    function searchTrips(event) {
+      event.preventDefault(); // Prevent the form from being submitted normally
+
+      var origin = document.getElementById("origin").value;
+      var destination = document.getElementById("destination").value;
+      var date = document.getElementById("date").value;
+
+      fetch(
+        "/api/trips/search?origin=" + origin + "&destination=" + destination + "&date=" + date,
+        {
+          method: "GET",
+        }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          // Display the trips
+          var trips = data;
+          var price;
+          var tripsHtml = "<h2 class='text-2xl font-bold mb-4'>Trips</h2>";
+          tripsHtml += "<table class='border-collapse'>";
+          tripsHtml += "<tr><th class='border px-4 py-2'>Origin</th><th class='border px-4 py-2'>Destination</th><th class='border px-4 py-2'>Date</th><th class='border px-4 py-2'>Price</th><th class='border px-4 py-2'></th></tr>";
+          trips.forEach((trip) => {
+            price = setPrice(trip.priceEuro).then(price => {
+              tripsHtml += "<tr>";
+              tripsHtml += "<td class='border px-4 py-2'>" + trip.origin + "</td>";
+              tripsHtml += "<td class='border px-4 py-2'>" + trip.destination + "</td>";
+              tripsHtml += "<td class='border px-4 py-2'>" + trip.date + "</td>";
+              tripsHtml += "<td class='border px-4 py-2 price'>" + price + " " + document.getElementById("currency").value + "</td>";
+              tripsHtml += "<td class='border px-4 py-2'><button class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline' onclick='reserveTrip(" + JSON.stringify(trip) + ")'>Reserve</button></td>";
+              tripsHtml += "</tr>";
+              document.getElementById("tripContainer").innerHTML = tripsHtml;
+            });
+          });
+
+          document.getElementById("tripContainer").innerHTML = tripsHtml;
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+
+    function reserveTrip(trip) {
+      fetch(
+        "/api/trips/reserve",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(trip),
+        }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          alert("Trip reserved, with ID: " + data.id);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+
+    function searchReservations() {
+      event.preventDefault(); // Prevent the form from being submitted normally
+
+      var reservationId = document.getElementById("reservationId").value;
+      console.log(reservationId);
+
+      fetch(
+        "/api/trips/reservations/" + reservationId,
+        {
+          method: "GET",
+        }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          // Display the reservation
+          var reservation = data;
+          var price = setPrice(reservation.trip.priceEuro).then(price => {
+            var reservationHtml = "<h2 class='text-2xl font-bold mb-4'>Reservation</h2>";
+            reservationHtml += "<table class='border-collapse'>";
+            reservationHtml += "<tr><th class='border px-4 py-2'>Origin</th><th class='border px-4 py-2'>Destination</th><th class='border px-4 py-2'>Date</th><th class='border px-4 py-2'>Price</th><th class='border px-4 py-2'>ID</th></tr>";
+            reservationHtml += "<tr>";
+            reservationHtml += "<td class='border px-4 py-2'>" + reservation.trip.origin + "</td>";
+            reservationHtml += "<td class='border px-4 py-2'>" + reservation.trip.destination + "</td>";
+            reservationHtml += "<td class='border px-4 py-2'>" + reservation.trip.date + "</td>";
+            reservationHtml += "<td class='border px-4 py-2 price'>" + price + " " + document.getElementById("currency").value + "</td>";
+            reservationHtml += "<td class='border px-4 py-2'>" + reservation.id + "</td>";
+            reservationHtml += "</tr>";
+            reservationHtml += "</table>";
+            document.getElementById("reservationContainer").innerHTML = reservationHtml;
+          });
+
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+
+    function updatePrice(currency) {
+      var priceElements = document.getElementsByClassName("price");
+      var prices = Array.from(priceElements).map((element) => parseFloat(element.innerText.split(" ")[0]));
+      var currency_before = priceElements[0].innerText.split(" ")[1];
+      var exchangeRate;
+      var price;
+
+      fetch("https://v6.exchangerate-api.com/v6/13728cda03f382b4ab4e9198/latest/EUR")
+        .then((response) => response.json())
+        .then((data) => {
+          exchangeRate = data.conversion_rates[currency] / data.conversion_rates[currency_before];
+
+          for (var i = 0; i < priceElements.length; i++) {
+            price = prices[i] * exchangeRate;
+            price = Math.round(price * 100) / 100;
+            priceElements[i].innerText = price + " " + currency;
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+
+    function setPrice(priceEuro) {
+      var currency = document.getElementById("currency").value;
+
+      var price;
+      var exchangeRate;
+      return fetch("https://v6.exchangerate-api.com/v6/13728cda03f382b4ab4e9198/latest/EUR")
+        .then((response) => response.json())
+        .then((data) => {
+          exchangeRate = data.conversion_rates[currency];
+          price = priceEuro * exchangeRate;
+          //round to 2 decimal places
+          price = Math.round(price * 100) / 100;
+
+          return price;
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  </script>
+</head>
+
+<body class="bg-gray-100">
+
+  <h1 class="text-4xl font-bold mb-4">Travel Planner</h1>
+  <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/4">  
+    <form>
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="currency">Currency:</label>
+      <select id="currency" name="currency"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        onchange="updatePrice(this.value)">
+        <option value="EUR">EUR</option>
+        <option value="USD">USD</option>
+        <option value="GBP">GBP</option>
+        <option value="JPY">JPY</option>
+      </select>
+    </form>
+  </div>
+  <form onsubmit="searchTrips(event)" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full sm:w-1/2">
+    <label class="block text-gray-700 text-sm font-bold mb-2" for="origin">Origin:</label>
+    <select id="origin" name="origin"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      <option value="Lisbon">Lisbon</option>
+      <option value="Madrid">Madrid</option>  
+      <option value="Paris">Paris</option>
+      <option value="London">London</option>
+      <option value="Berlin">Berlin</option>
+      <option value="Rome">Rome</option>
+      <option value="Amsterdam">Amsterdam</option>
+      <option value="Vienna">Vienna</option>
+    </select>
+    <label class="block text-gray-700 text-sm font-bold mb-2" for="destination">Destination:</label>
+    <select id="destination" name="destination"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      <option value="Lisbon">Lisbon</option>
+      <option value="Madrid">Madrid</option>
+      <option value="Paris">Paris</option>
+      <option value="London">London</option>
+      <option value="Berlin">Berlin</option>
+      <option value="Rome">Rome</option>
+      <option value="Amsterdam">Amsterdam</option>
+      <option value="Vienna">Vienna</option>
+    </select>
+    <label class="block text-gray-700 text-sm font-bold mb-2" for="date">Date:</label>
+    <input type="date" id="date" name="date"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+    <div class="flex items-center justify-between">
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        type="submit">
+        Search
+      </button>
+    </div>
+  </form>
+  <form onsubmit="searchTrips(event)" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full sm:w-1/2">
+    <label class="block text-gray-700 text-sm font-bold mb-2" for="reservationId">Reservation ID:</label>
+    <input type="text" id="reservationId" name="reservationId"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+    <div class="flex items-center justify-between">
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        onclick="searchReservations()">
+        Search
+      </button>
+    </div>
+  </form>
+  <!-- Container for trips -->
+  <div id="tripContainer"></div>
+  <!-- Container for reservations -->
+  <div id="reservationContainer"></div>
+</body>
+
+</html>
